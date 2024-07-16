@@ -103,7 +103,7 @@ class Post(PublishedModel):
 
     def __str__(self):
         return self.title[:NUM_CHAR_OUTPUT]
-    
+
 
 class Comment(models.Model):
     text = models.TextField(
@@ -132,6 +132,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:NUM_CHAR_OUTPUT]
-
-
-
