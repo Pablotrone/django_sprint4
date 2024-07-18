@@ -1,5 +1,5 @@
 from django.urls import reverse
-from django.shortcuts import get_object_or_404, redirect
+from django.core.exceptions import PermissionDenied
 
 from .forms import CommentForm, PostForm
 from .models import Comment, Post
@@ -38,11 +38,11 @@ class UniqueUrlAtributMixin:
     pk_url_kwarg = 'post_id'
 
 
-class DispatchMixin:
-    """Проверка на авторство"""
+class CommentDispatchMixin:
+    """Проверка на авторство комментария"""
 
     def dispatch(self, request, *args, **kwargs):
-        comment = get_object_or_404(Comment, id=self.kwargs['post_id'])
-        if request.user != comment.author:
-            return redirect('blog:post_detail', post_id=comment.pk)
+        self.object = self.get_object()
+        if self.object.author != request.user:
+            raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)

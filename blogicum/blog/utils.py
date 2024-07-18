@@ -10,16 +10,17 @@ def base_post_queryset():
         'category',
         'author'
     ).filter(
-        pub_date__lt=timezone.now(),
-        is_published=True,
-        category__is_published=True
+        is_published=True
     ).order_by('-pub_date')
 
 
 def get_published_posts():
     return Post.objects.filter(category__is_published=True,
-                               is_published=True, pub_date__lte=timezone.now())
+                               is_published=True,
+                               pub_date__lte=timezone.now()
+                               )
 
 
 def annotate_comment_count(queryset):
-    return queryset.annotate(comment_count=Count('comments'))
+    return queryset.annotate(comment_count=Count('comments')
+                             )

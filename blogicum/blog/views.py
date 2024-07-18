@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import (CreateView, DeleteView,
@@ -8,7 +7,7 @@ from django.views.generic import (CreateView, DeleteView,
 
 from blog.models import Category, Comment, Post
 from .constants import POST_VALUE_PER_PAGE
-from .mixins import (CommentBaseModelMixin, DispatchMixin,
+from .mixins import (CommentBaseModelMixin, CommentDispatchMixin,
                      GetUrlMixin, PostBaseModelMixin, UniqueUrlAtributMixin)
 from .utils import (base_post_queryset, get_published_posts,
                     annotate_comment_count)
@@ -54,10 +53,16 @@ class PostDetailView(DetailView):
 
     def get_object(self):
         post_id = self.kwargs.get('post_id')
-        post = get_object_or_404(Post, pk=post_id)
-        if (self.request.user == post.author or post in base_post_queryset()):
-            return post
-        raise Http404("Page not found")
+        get_published_posts = base_post_queryset()
+        try:
+            post = get_published_posts.get(pk=post_id)
+        except Post.DoesNotExist:
+            post = get_object_or_404(
+                Post,
+                pk=post_id,
+                author=self.request.user
+            )
+        return post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -159,7 +164,9 @@ class ProfileListView(ListView):
         )
         if self.request.user == self.user:
             return posts
-        return posts.filter(is_published=True)
+        return annotate_comment_count(get_published_posts()).order_by(
+            '-pub_date'
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -197,9 +204,8 @@ class CommentCreateView(
 
     def form_valid(self, form):
         post = get_object_or_404(
-            Post,
+            get_published_posts(),
             pk=self.kwargs['post_id'],
-            is_published=True
         )
         form.instance.author = self.request.user
         form.instance.post = post
@@ -208,7 +214,7 @@ class CommentCreateView(
 
 class CommentUpdateView(
     CommentBaseModelMixin,
-    DispatchMixin,
+    CommentDispatchMixin,
     GetUrlMixin,
     LoginRequiredMixin,
     UpdateView
@@ -218,7 +224,7 @@ class CommentUpdateView(
 
 class CommentDeleteView(
     CommentBaseModelMixin,
-    DispatchMixin,
+    CommentDispatchMixin,
     GetUrlMixin,
     LoginRequiredMixin,
     DeleteView
