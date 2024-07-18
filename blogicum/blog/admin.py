@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Location, Post
+from .models import Category, Location, Post, Comment
 
 admin.site.empty_value_display = 'Не задано'
 
@@ -51,3 +51,17 @@ class LocationAdmin(admin.ModelAdmin):
     )
     list_editable = ('is_published',)
     list_display_links = ('name',)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'text',
+        'post',
+        'author',
+        'created_at',
+    )
+    list_filter = ('post', 'author',)
+    search_fields = ('text',)
+    list_display_links = ('id',)

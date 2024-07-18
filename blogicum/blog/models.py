@@ -1,8 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-MAX_LENGTH = 256
-NUM_CHAR_OUTPUT = 15
+from .constants import NUM_CHAR_OUTPUT, MAX_LENGTH
 
 User = get_user_model()
 
@@ -75,20 +74,22 @@ class Post(PublishedModel):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='posts',
         verbose_name='Автор публикации'
     )
     location = models.ForeignKey(
         Location,
         on_delete=models.SET_NULL,
         verbose_name='Местоположение',
-        related_name='post',
-        null=True
+        related_name='posts',
+        null=True,
+        blank=True
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         verbose_name='Категория',
-        related_name='post',
+        related_name='posts',
         null=True
     )
     image = models.ImageField(
@@ -113,12 +114,13 @@ class Comment(models.Model):
         Post,
         on_delete=models.CASCADE,
         verbose_name='Пост для комментария',
-        related_name='comment'
+        related_name='comments'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        verbose_name='Автор',
+        related_name='comments'
     )
     created_at = models.DateTimeField(
         auto_now_add=True,

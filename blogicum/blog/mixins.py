@@ -38,11 +38,11 @@ class UniqueUrlAtributMixin:
     pk_url_kwarg = 'post_id'
 
 
-class DispacthMixin:
+class DispatchMixin:
     """Проверка на авторство"""
 
     def dispatch(self, request, *args, **kwargs):
-        posts = get_object_or_404(Comment, id=self.kwargs['comment_id'])
-        if request.user != posts.author:
-            return redirect('blog:post_detail', post_id=posts.pk)
+        comment = get_object_or_404(Comment, id=self.kwargs['post_id'])
+        if request.user != comment.author:
+            return redirect('blog:post_detail', post_id=comment.pk)
         return super().dispatch(request, *args, **kwargs)
