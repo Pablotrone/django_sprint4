@@ -9,7 +9,7 @@ from blog.models import Category, Comment, Post
 from .constants import POST_VALUE_PER_PAGE
 from .mixins import (CommentBaseModelMixin, CommentDispatchMixin,
                      GetUrlMixin, PostBaseModelMixin, UniqueUrlAtributMixin)
-from .utils import (base_post_queryset, get_published_posts,
+from .utils import (base_post_details, get_published_posts,
                     annotate_comment_count)
 from .forms import CommentForm, UserForm
 
@@ -53,16 +53,19 @@ class PostDetailView(DetailView):
 
     def get_object(self):
         post_id = self.kwargs.get('post_id')
-        get_published_posts = base_post_queryset()
-        try:
-            post = get_published_posts.get(pk=post_id)
-        except Post.DoesNotExist:
+        start_queryset = Post.objects.all()
+        base_queryset = base_post_details(start_queryset)
+        post = get_object_or_404(base_queryset, pk=post_id)
+        if self.request.user == post.author:
+            return post
+        else:
+            published_posts = get_published_posts()
+            base_queryset = base_post_details(published_posts)
             post = get_object_or_404(
-                Post,
-                pk=post_id,
-                author=self.request.user
+                base_queryset,
+                pk=self.kwargs['post_id']
             )
-        return post
+            return post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -4,13 +4,11 @@ from django.utils import timezone
 from blog.models import Post
 
 
-def base_post_queryset():
-    return Post.objects.select_related(
+def base_post_details(queryset):
+    return queryset.select_related(
         'author',
         'category',
-        'author'
-    ).filter(
-        is_published=True
+        'location'
     ).order_by('-pub_date')
 
 
@@ -22,5 +20,7 @@ def get_published_posts():
 
 
 def annotate_comment_count(queryset):
-    return queryset.annotate(comment_count=Count('comments')
-                             )
+    return queryset.annotate(
+        comment_count=Count(
+            'comments')
+    ).order_by('-pub_date')
